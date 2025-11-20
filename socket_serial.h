@@ -20,7 +20,7 @@
 #define CHUNK_SIZE 8
 
 extern struct termios tty;
-extern struct sockaddr_un addr;
+// extern struct sockaddr_un addr;
 
 extern int clients[MAX_CONNECTIONS];
 
@@ -39,12 +39,14 @@ void readSerial(int ser);
 void writeSerial(int ser);
 
 void readSocket(int client);
-void writeSockets(int *client);
+void writeSockets(int *clients, fd_set fds);
 
 void removeClosedClients(void);
 
 void addNewConnections(int sock);
 
 void socketSetup(int sock);
+
+void set_nonblocking(int fd);
 
 #endif // SOCKET_SERIAL_H

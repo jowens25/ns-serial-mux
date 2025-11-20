@@ -3,7 +3,7 @@
 #define CIRCULAR_BUFFER_H
 #include <stdbool.h>
 
-#define BUFFER_SIZE 2048
+#define BUFFER_SIZE 1024
 
 typedef struct
 {

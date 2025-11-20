@@ -75,6 +75,7 @@ bool cb_read(cir_buf_t *cb, char *value)
 int cb_read_chunk(cir_buf_t *cb, char *buf, int size)
 {
 
+    // no data
     if (cb->count == 0)
     {
         return 0;
@@ -82,13 +83,20 @@ int cb_read_chunk(cir_buf_t *cb, char *buf, int size)
 
     int read_size = 0;
 
+    // search in data, tail to count
     for (int i = 0; i < cb->count; i++)
     {
         int idx = (cb->tail + i) % BUFFER_SIZE;
         if (cb->data[idx] == '\n')
         {
-            read_size = i + 1; // Include the newline
+            read_size = i + 1; // size to new line
         }
+    }
+
+    // if size is bigger than available output buffer
+    if (read_size > size)
+    {
+        read_size = size;
     }
 
     if (read_size == 0)
@@ -96,15 +104,18 @@ int cb_read_chunk(cir_buf_t *cb, char *buf, int size)
         return 0; // No complete line available
     }
 
-    // Read the data
+    // tail idx plus size
     int first_chunk = read_size;
     if (cb->tail + read_size > BUFFER_SIZE)
     {
+        // if overflows, use remainder
         first_chunk = BUFFER_SIZE - cb->tail;
     }
 
+    // copy from tail to either remainder or size
     memcpy(buf, &cb->data[cb->tail], first_chunk);
 
+    // copy from start to partial
     if (first_chunk < read_size)
     {
         memcpy(buf + first_chunk, &cb->data[0], read_size - first_chunk);

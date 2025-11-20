@@ -12,12 +12,10 @@
 #include <stdbool.h>
 #include "circular_buffer.h"
 
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+
 struct termios tty;
-
-struct sockaddr_un addr;
-
 int clients[MAX_CONNECTIONS] = {-1, -1, -1, -1};
-
 int max_fd;
 
 int main()
@@ -26,14 +24,21 @@ int main()
     cb_init(&ser_cb);
     cb_init(&sock_cb);
 
-    // Open serial port
+    // open and setup serial port
     int ser = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_SYNC);
     if (ser < 0)
     {
         perror("unable to open serial port");
         return -1;
     }
-    serialSetup(ser);
+
+    // open and setup socket
+    int err = serialSetup(ser);
+    if (err != 0)
+    {
+        printf("serial setup error");
+    }
+    set_nonblocking(ser);
 
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock == -1)
@@ -44,75 +49,140 @@ int main()
     }
     socketSetup(sock);
 
-    printf("Serving %s on %s\r\n", SERIAL_PORT, SOCKET_PATH);
+    fd_set readfds;
+    fd_set writefds;
 
     while (1)
     {
-        fd_set readfds;
+
+        // collect active file descriptors
+        max_fd = 0;
+
         FD_ZERO(&readfds);
+        FD_ZERO(&writefds);
 
         FD_SET(ser, &readfds);
-        max_fd = ser;
+        FD_SET(ser, &writefds);
+
+        max_fd = MAX(ser, max_fd);
 
         FD_SET(sock, &readfds);
-        if (sock > max_fd)
-        {
-            max_fd = sock;
-        }
+        FD_SET(sock, &writefds);
+
+        max_fd = MAX(sock, max_fd);
 
         for (int i = 0; i < MAX_CONNECTIONS; i++)
         {
             if (clients[i] != -1)
             {
                 FD_SET(clients[i], &readfds);
-                if (clients[i] > max_fd)
-                    max_fd = clients[i];
+                FD_SET(clients[i], &writefds);
+
+                max_fd = MAX(clients[i], max_fd);
             }
         }
 
-        struct timeval timeout = {1, 0};
-        int activity = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
+        struct timeval timeout = {0, 100000};
+        int activity = select(max_fd + 1, &readfds, &writefds, NULL, &timeout);
 
         if (activity < 0)
         {
-            perror("select error");
+            perror("select error\r\n");
             break;
         }
 
-        if (activity == 0)
+        else if (activity == 0)
         {
+            perror("timeout\r\n");
             continue;
         }
 
-        if (FD_ISSET(sock, &readfds))
+        else
         {
-            addNewConnections(sock);
-        }
 
-        removeClosedClients();
+            // serial handlers
+            if (FD_ISSET(ser, &readfds))
+            {
+                readSerial(ser);
+            }
+            if (FD_ISSET(ser, &writefds))
+            {
+                writeSerial(ser);
+            }
 
-        if (FD_ISSET(ser, &readfds))
-        {
-            readSerial(ser);
-        }
+            // read sockets
+            for (int i = 0; i < MAX_CONNECTIONS; i++)
+            {
+                // if clients are valid and set
+                if (clients[i] != -1 && FD_ISSET(clients[i], &readfds))
+                {
+                    readSocket(clients[i]);
+                }
+            }
 
-        writeSockets(&clients);
+            // write sockets
+            writeSockets(clients, writefds);
 
-        for (int i = 0; i < MAX_CONNECTIONS; i++)
-        {
-            if (clients[i] != -1 && FD_ISSET(clients[i], &readfds))
-
+            // new connection handler
+            // if socket is ready, trying to connect, accept a connection
+            if (FD_ISSET(sock, &readfds))
             {
 
-                readSocket(clients[i]);
+                int new_client = accept(sock, NULL, NULL);
+                if (new_client < 0)
+                {
+                    perror("accept failed\r\n");
+                    continue;
+                }
+
+                set_nonblocking(new_client);
+                bool added = false;
+
+                // ADD to clients if its not taken
+                for (int i = 0; i < MAX_CONNECTIONS; i++)
+                {
+                    if (clients[i] < 0)
+                    { // -1
+                        clients[i] = new_client;
+                        added = true;
+                        printf("Client %d connected  (fd=%d)\n", i, clients[i]);
+                        break;
+                    }
+                }
+                if (!added)
+                {
+                    fprintf(stderr, "Max connections reached, rejecting client\n");
+                    close(new_client);
+                }
+            }
+
+            // remove old connections
+            for (int i = 0; i < MAX_CONNECTIONS; i++)
+            {
+
+                if (clients[i] != -1)
+                {
+
+                    char buf[1];
+                    int result = recv(clients[i], buf, 1, MSG_PEEK | MSG_DONTWAIT);
+                    if (result == 0)
+                    {
+                        printf("Client %d disconnected gracefully (fd=%d)\n", i, clients[i]);
+                        close(clients[i]);
+                        clients[i] = -1;
+                        continue;
+                    }
+
+                    if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+                    {
+                        printf("Client %d error: %s\n", i, strerror(errno));
+                        close(clients[i]);
+                        clients[i] = -1;
+                        continue;
+                    }
+                }
             }
         }
-
-        if (FD_ISSET(ser, &readfds))
-        {
-            writeSerial(ser);
-        }
     }
-
     return 0;
 }

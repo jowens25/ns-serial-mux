@@ -5,6 +5,30 @@
 #include <sys/un.h>
 #include "circular_buffer.h"
 #include <errno.h>
+#include <sys/select.h>
+#include "stdio.h"
+#include "string.h" //strlen
+#include "stdlib.h"
+#include "errno.h"
+#include "unistd.h"    //close
+#include "arpa/inet.h" //close
+#include "sys/types.h"
+#include "sys/socket.h"
+#include "netinet/in.h"
+#include "sys/time.h" //FD_SET, FD_ISSET, FD_ZERO macros
+
+#include "socket_serial.h"
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <sys/select.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <stdbool.h>
+#include "circular_buffer.h"
 
 char chunk[CHUNK_SIZE] = {0};
 char socket_chunk[CHUNK_SIZE] = {0};
@@ -13,31 +37,17 @@ void readSerial(int ser)
 {
 
     int n = read(ser, chunk, CHUNK_SIZE);
-
     if (n > 0)
     {
-
         cb_write_chunk(&ser_cb, chunk, n);
-    }
-}
-
-// should combine both socket connections in to the same cir buf
-void readSocket(int client)
-{
-
-    int n = read(client, socket_chunk, CHUNK_SIZE);
-    if (n > 0)
-    {
-
-        cb_write_chunk(&sock_cb, socket_chunk, n);
     }
 }
 
 void writeSerial(int ser)
 {
 
-    char tx[128];
-    int bytes_read = cb_read_chunk(&sock_cb, tx, 128);
+    char tx[BUFFER_SIZE];
+    int bytes_read = cb_read_chunk(&sock_cb, tx, BUFFER_SIZE);
 
     if (bytes_read == 0)
     {
@@ -55,11 +65,23 @@ void writeSerial(int ser)
     }
 }
 
-void writeSockets(int *clients)
+// should combine both socket connections in to the same cir buf
+void readSocket(int client)
 {
 
-    char tx[128];
-    int bytes_read = cb_read_chunk(&ser_cb, tx, 128);
+    int n = read(client, socket_chunk, CHUNK_SIZE);
+    if (n > 0)
+    {
+
+        cb_write_chunk(&sock_cb, socket_chunk, n);
+    }
+}
+
+void writeSockets(int *clients, fd_set writefds)
+{
+
+    char tx[BUFFER_SIZE];
+    int bytes_read = cb_read_chunk(&ser_cb, tx, BUFFER_SIZE);
 
     if (bytes_read == 0)
     {
@@ -68,101 +90,44 @@ void writeSockets(int *clients)
 
     for (int i = 0; i < MAX_CONNECTIONS; i++)
     {
-        if (clients[i] == -1)
-            continue;
-
-        int n = write(clients[i], tx, bytes_read);
-
-        if (n < 0)
+        // if clients are valid and set
+        if (clients[i] != -1 && FD_ISSET(clients[i], &writefds))
         {
-            if (errno == EPIPE || errno == ECONNRESET || errno == EBADF)
+            int n = write(clients[i], tx, bytes_read);
+
+            if (n < 0)
             {
-                printf("Client %d disconnected\n", i);
-                close(clients[i]);
-                clients[i] = -1;
+                if (errno == EPIPE || errno == ECONNRESET || errno == EBADF)
+                {
+                    printf("Client %d disconnected\n", clients[i]);
+                    // close(client);
+                }
             }
-        }
-    }
-}
-
-void removeClosedClients(void)
-{
-    char buf[1];
-    for (int i = 0; i < MAX_CONNECTIONS; i++)
-    {
-        if (clients[i] == -1) // Skip invalid clients - THIS IS CRITICAL
-            continue;
-
-        int result = recv(clients[i], buf, 1, MSG_PEEK | MSG_DONTWAIT);
-
-        if (result == 0)
-        {
-            printf("Client %d disconnected gracefully (fd=%d)\n", i, clients[i]);
-            close(clients[i]);
-            clients[i] = -1;
-        }
-        else if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
-        {
-            printf("Client %d error: %s\n", i, strerror(errno));
-            close(clients[i]);
-            clients[i] = -1;
-        }
-    }
-}
-
-void addNewConnections(int sock)
-{
-
-    int new_client = accept(sock, NULL, NULL);
-    if (new_client == -1)
-    {
-        perror("unable to accept");
-    }
-    else
-    {
-        // Find empty slot for new client
-        int added = 0;
-        for (int i = 0; i < MAX_CONNECTIONS; i++)
-        {
-            if (clients[i] == -1)
-            {
-                clients[i] = new_client;
-                printf("Client %d connected (fd=%d)\n", i, new_client);
-                added = 1;
-                break;
-            }
-        }
-        if (!added)
-        {
-            printf("Max clients reached, rejecting connection\n");
-            close(new_client);
         }
     }
 }
 
 void socketSetup(int sock)
 {
-
+    // socket setup
     struct sockaddr_un addr;
+
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1);
-
-    unlink(SOCKET_PATH);
-
+    unlink(SOCKET_PATH); // Remove stale file
     if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) == -1)
     {
-        perror("unable to bind?");
-        close(sock);
-        exit(-1);
+        perror("bind failed");
+        exit(1);
     }
-
     if (listen(sock, MAX_CONNECTIONS) == -1)
     {
-        perror("unable to listen");
-        close(sock);
-        exit(-1);
+        perror("listen failed");
+        exit(1);
     }
+    set_nonblocking(sock);
+    printf("Serving %s on %s\r\n", SERIAL_PORT, SOCKET_PATH);
 }
 
 int serialSetup(int fd)
@@ -214,4 +179,11 @@ int serialSetup(int fd)
 
     tcflush(fd, TCIOFLUSH);
     return 0;
+}
+
+void set_nonblocking(int fd)
+{
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags != -1)
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
