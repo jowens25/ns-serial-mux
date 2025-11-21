@@ -14,11 +14,11 @@
 #include <stddef.h>
 
 #define SOCKET_PATH "/tmp/serial.sock"
-#define SERIAL_PORT "/dev/ttyUSB0"
+// #define SERIAL_PORT "/dev/ttyUSB0"
 #define MAX_CONNECTIONS 4
 
 #define CHUNK_SIZE 8
-
+#define SERIAL_PORT_LEN 128
 extern struct termios tty;
 // extern struct sockaddr_un addr;
 
@@ -29,6 +29,7 @@ extern char chunk[CHUNK_SIZE];
 extern int offset;
 extern int head;
 extern int tail;
+extern char SERIAL_PORT[SERIAL_PORT_LEN];
 
 int serRead(int ser, char data[], size_t dataLength);
 int serWrite(int ser, char data[], size_t dataLength);

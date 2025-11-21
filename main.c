@@ -18,8 +18,19 @@ struct termios tty;
 int clients[MAX_CONNECTIONS] = {-1, -1, -1, -1};
 int max_fd;
 
-int main()
+char SERIAL_PORT[SERIAL_PORT_LEN] = {0};
+
+int main(int argc, char *argv[])
 {
+
+    if (argv[1] == NULL)
+    {
+        printf("Please include a serial port\r\n");
+        printf("example: %s /dev/ttymxc2\r\n", argv[0]);
+        exit(-1);
+    }
+
+    strncpy(SERIAL_PORT, argv[1], strlen(argv[1]));
 
     cb_init(&ser_cb);
     cb_init(&sock_cb);
