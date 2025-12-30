@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include "circular_buffer.h"
-
+//
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 struct termios tty;
@@ -129,10 +129,16 @@ int main(int argc, char *argv[])
                 {
                     readSocket(clients[i]);
                 }
+
+                // if clients are valid and set
+                if (clients[i] != -1 && FD_ISSET(clients[i], &writefds))
+                {
+                    readSocket(clients[i]);
+                }
             }
 
-            // write sockets
-            writeSockets(clients, writefds);
+            // write writefds sockets
+            writeSockets(clients, writefds, readfds);
 
             // new connection handler
             // if socket is ready, trying to connect, accept a connection

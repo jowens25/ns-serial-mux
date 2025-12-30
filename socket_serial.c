@@ -33,9 +33,9 @@
 char chunk[CHUNK_SIZE] = {0};
 char socket_chunk[CHUNK_SIZE] = {0};
 
+// read from serial file descriptor into cir buff
 void readSerial(int ser)
 {
-
     int n = read(ser, chunk, CHUNK_SIZE);
     if (n > 0)
     {
@@ -43,6 +43,7 @@ void readSerial(int ser)
     }
 }
 
+// write from socket cir buff to serial fle descriptor (and other clients)
 void writeSerial(int ser)
 {
 
@@ -63,6 +64,11 @@ void writeSerial(int ser)
             printf("Serial write error");
         }
     }
+
+    else if (n > 0)
+    {
+        cb_write_chunk(&ser_cb, tx, n);
+    }
 }
 
 // should combine both socket connections in to the same cir buf
@@ -77,7 +83,8 @@ void readSocket(int client)
     }
 }
 
-void writeSockets(int *clients, fd_set writefds)
+//
+void writeSockets(int *clients, fd_set writefds, fd_set readfds)
 {
 
     char tx[BUFFER_SIZE];
@@ -91,8 +98,10 @@ void writeSockets(int *clients, fd_set writefds)
     for (int i = 0; i < MAX_CONNECTIONS; i++)
     {
         // if clients are valid and set
-        if (clients[i] != -1 && FD_ISSET(clients[i], &writefds))
+        if (clients[i] != -1 && (FD_ISSET(clients[i], &writefds) || FD_ISSET(clients[i], &readfds)))
         {
+            // printf("write to client: %d\n", clients[i]);
+
             int n = write(clients[i], tx, bytes_read);
 
             if (n < 0)
