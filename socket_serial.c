@@ -33,6 +33,8 @@
 char chunk[CHUNK_SIZE] = {0};
 char socket_chunk[CHUNK_SIZE] = {0};
 
+
+// read serial data into serial buffer
 void readSerial(int ser)
 {
 
@@ -43,6 +45,7 @@ void readSerial(int ser)
     }
 }
 
+// write socket buffer to serial
 void writeSerial(int ser)
 {
 
@@ -65,18 +68,22 @@ void writeSerial(int ser)
     }
 }
 
-// should combine both socket connections in to the same cir buf
+// read socket data into socket buffer
 void readSocket(int client)
 {
 
     int n = read(client, socket_chunk, CHUNK_SIZE);
     if (n > 0)
     {
-
+        
         cb_write_chunk(&sock_cb, socket_chunk, n);
+        
+        cb_write_chunk(&ser_cb, socket_chunk, n);
+
     }
 }
 
+// write serial buffer to clients
 void writeSockets(int *clients, fd_set writefds)
 {
 

@@ -12,6 +12,9 @@
 #include <stdbool.h>
 #include "circular_buffer.h"
 
+
+
+
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 struct termios tty;
@@ -61,23 +64,34 @@ int main()
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
 
+        // Always monitor serial for reading
         FD_SET(ser, &readfds);
-        FD_SET(ser, &writefds);
-
         max_fd = MAX(ser, max_fd);
 
-        FD_SET(sock, &readfds);
-        FD_SET(sock, &writefds);
+        // Only monitor serial for writing if we have data from sockets to send
+        if (!cb_is_empty(&sock_cb))
+        {
+            FD_SET(ser, &writefds);
+        }
 
+        // Always monitor socket for new connections
+        FD_SET(sock, &readfds);
         max_fd = MAX(sock, max_fd);
 
+        // Monitor client connections
         for (int i = 0; i < MAX_CONNECTIONS; i++)
         {
             if (clients[i] != -1)
             {
+                // Always monitor clients for reading
                 FD_SET(clients[i], &readfds);
-                FD_SET(clients[i], &writefds);
 
+                // Only monitor clients for writing if we have serial data to send
+                if (!cb_is_empty(&ser_cb))
+                {
+                    FD_SET(clients[i], &writefds);
+                }
+            
                 max_fd = MAX(clients[i], max_fd);
             }
         }
@@ -93,7 +107,7 @@ int main()
 
         else if (activity == 0)
         {
-            perror("timeout\r\n");
+            //perror("timeout\r\n");
             continue;
         }
 
