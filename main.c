@@ -79,14 +79,13 @@ int main(int argc, char *argv[])
         FD_SET(ser, &readfds);
         max_fd = MAX(ser, max_fd);
 
+
+        // removed because serial is non blocking and almost alwyas writeable???
         // only check serial for writing if we have something to write
-        if (!cb_is_empty(&sock_cb)) {
+        //if (!cb_is_empty(&sock_cb)) {
 
-            FD_SET(ser, &writefds);
-
-            max_fd = MAX(ser, max_fd);
-
-        }
+        //    FD_SET(ser, &writefds);
+        //}
 
 
 
@@ -104,10 +103,11 @@ int main(int argc, char *argv[])
                 FD_SET(clients[i], &readfds);
                 max_fd = MAX(clients[i], max_fd);
 
+                //if (!cb_is_empty(&ser_cb)){
+                //    FD_SET(clients[i], &writefds);
+                //
+                //}
 
-                FD_SET(clients[i], &writefds);
-                max_fd = MAX(clients[i], max_fd);
-                
 
 
             }
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 
         struct timeval timeout = {0, 100000};
         //int activity = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
-        int activity = select(max_fd + 1, &readfds, &writefds, NULL, &timeout);
+        int activity = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
 
         printf("act: %d\r\n", activity);
 
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
                 readSerial(ser);
             }
 
-            if (FD_ISSET(ser, &writefds))
+            if (!cb_is_empty(&sock_cb))
             {
                 writeSerial(ser);
             }
@@ -160,23 +160,18 @@ int main(int argc, char *argv[])
             }
 
             // if data available write sockets
+
             if (!cb_is_empty(&ser_cb)) {
 
                 bytes_read = cb_read_chunk(&ser_cb, tx, BUFFER_SIZE);
-                
-                if (bytes_read == 0)
-                {
-                    perror("no bytes read?");
-                    continue;
-                }
-            }
-            
 
-            for (int i = 0; i < MAX_CONNECTIONS; i++) {
-
-                if (clients[i] != -1 && FD_ISSET(clients[i], &writefds)) {
-
-                    writeSocket(clients[i], tx, bytes_read);
+                if (bytes_read > 0) {
+                    // Write to all writable clients
+                    for (int i = 0; i < MAX_CONNECTIONS; i++) {
+                        if (clients[i] != -1 ) {
+                            writeSocket(clients[i], tx, bytes_read);
+                        }
+                    }
                 }
             }
         
