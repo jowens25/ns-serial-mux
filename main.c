@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 
         else if (activity == 0)
         {
-            perror("timeout\r\n");
+            //perror("timeout\r\n");
             continue;
         }
 
