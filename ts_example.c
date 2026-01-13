@@ -156,5 +156,7 @@ int main(int argc, char** argv) {
         close(client_socket);
     }
 
+    close(server_socket);
+
     return 0;
 }
