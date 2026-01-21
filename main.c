@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        struct timeval timeout = {0, 100000};
+        struct timeval timeout = {0, 1000}; // 1000 = 1ms
         //int activity = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
         int activity = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
 
@@ -173,10 +173,6 @@ int main(int argc, char *argv[])
 
             
 
-            if (!cb_is_empty(&sock_cb))
-            {
-                writeSerial(ser);
-            }
 
             
 
@@ -192,19 +188,8 @@ int main(int argc, char *argv[])
 
             // if data available write sockets
 
-            if (!cb_is_empty(&ser_cb)) {
-
-                bytes_read = cb_read_chunk(&ser_cb, tx, BUFFER_SIZE);
-
-                if (bytes_read > 0) {
-                    // Write to all writable clients
-                    for (int i = 0; i < MAX_CONNECTIONS; i++) {
-                        if (clients[i] != -1 ) {
-                            writeSocket(clients[i], tx, bytes_read);
-                        }
-                    }
-                }
-            }
+       
+            //}
         
 
 
@@ -264,6 +249,24 @@ int main(int argc, char *argv[])
                         close(clients[i]);
                         clients[i] = -1;
                         continue;
+                    }
+                }
+            }
+        }
+             
+        if (!cb_is_empty(&sock_cb))
+        {
+            writeSerial(ser);
+        }
+
+        if (!cb_is_empty(&ser_cb)) {
+            //while(!cb_is_empty(&ser_cb)) {
+            bytes_read = cb_read_chunk(&ser_cb, tx, BUFFER_SIZE);
+            if (bytes_read > 0) {
+                // Write to all writable clients
+                for (int i = 0; i < MAX_CONNECTIONS; i++) {
+                    if (clients[i] != -1 ) {
+                        writeSocket(clients[i], tx, bytes_read);
                     }
                 }
             }

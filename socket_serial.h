@@ -17,7 +17,7 @@
 // #define SERIAL_PORT "/dev/ttyUSB0"
 #define MAX_CONNECTIONS 4
 
-#define CHUNK_SIZE 8
+#define CHUNK_SIZE 256
 #define SERIAL_PORT_LEN 128
 extern struct termios tty;
 // extern struct sockaddr_un addr;
