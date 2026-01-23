@@ -10,19 +10,187 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdbool.h>
-#include "circular_buffer.h"
+//#include "circular_buffer.h"
 //
+
+#define SOCKET_PATH "/tmp/serial.sock"
+
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
-
-struct termios tty;
-int clients[MAX_CONNECTIONS] = {-1, -1, -1, -1};
-int max_fd;
+//
+//struct termios tty;
+//int clients[MAX_CONNECTIONS] = {-1, -1, -1, -1};
+//int max_fd;
 int debug = false;
+//
+//char SERIAL_PORT[SERIAL_PORT_LEN] = {0};
 
-char SERIAL_PORT[SERIAL_PORT_LEN] = {0};
-
-int main(int argc, char *argv[])
+void broadcast(char *buf, int nbytes, int listener, int s,
+               fd_set *master, int fdmax)
 {
+    for(int j = 0; j <= fdmax; j++) {
+        // send to everyone!
+        if (FD_ISSET(j, master)) {
+            // except the listener and ourselves
+            if (j != listener && j != s) {
+                if (write(j, buf, nbytes) == -1) {
+                    perror("send");
+                }
+            }
+        }
+    }
+}
+
+
+void handle_client_data(int s, int listener, fd_set *master, int fdmax)
+{
+    char buf[256];
+    int nbytes;
+
+    if((nbytes = read(s, buf, sizeof(buf))) <= 0)
+    {
+        if (nbytes == 0) {
+            printf("sselect server: socket %d hung up\n", s);
+        } else {
+            perror("read");
+        }
+        close(s);
+        FD_CLR(s, master);
+    } else {
+        broadcast(buf, nbytes, listener, s, master, fdmax);
+    }
+}
+
+void handle_new_connection(int listener, fd_set *master, int *fdmax)
+{
+
+    int newfd;
+
+    newfd = accept(listener, NULL, NULL);
+
+    if (newfd == -1) {
+        perror("accept");
+    } else{
+        FD_SET(newfd, master);
+        if(newfd > *fdmax) {
+            *fdmax = newfd;
+        }
+        printf("select server: new connection on %d\n", newfd);
+    }
+}
+
+int get_listener_socket(void)
+{
+
+    struct sockaddr_un addr;
+    int yes=1;
+    int rv;
+    int listener;
+
+    memset(&addr, 0, sizeof(addr));
+
+    addr.sun_family = AF_UNIX;
+
+    strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1);
+
+    // skip getaddrinfo
+
+    listener = socket(AF_UNIX, SOCK_STREAM, 0);
+
+    setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+
+    if(bind(listener, (struct sockaddr *)&addr, sizeof(addr)) < 0) 
+    {
+        close(listener);
+        perror("bind");
+    }
+
+    if (listen(listener, 10) == -1) {
+        perror("listen");
+        exit(3);
+    }
+
+    return listener;
+
+}
+
+
+int get_listener_serial(void)
+{
+
+
+    int listener = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_SYNC);
+    if (listener < 0)
+    {
+        perror("unable to open serial port");
+        return -1;
+    }
+
+
+     // printf("setup termios\n");
+    memset(&tty, 0, sizeof tty);
+
+    if (tcgetattr(listener, &tty) != 0)
+    {
+        printf("tcgetattr");
+        close(listener);
+        return -1;
+    }
+
+    cfsetospeed(&tty, B38400);
+    cfsetispeed(&tty, B38400);
+
+    // 8N1 configuration
+    tty.c_cflag &= ~CSIZE;
+    tty.c_cflag |= CS8;
+    tty.c_cflag &= ~PARENB;
+    tty.c_cflag &= ~CSTOPB;
+    // tty.c_cflag &= ~CRTSCTS; // Disable hardware flow control
+    tty.c_cflag |= (CLOCAL | CREAD);
+
+    // Input processing - disable all special processing
+    tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+
+    // Output processing - raw output
+    tty.c_oflag &= ~OPOST;
+
+    // CRITICAL FIX: Disable canonical mode for character-by-character reading
+    tty.c_lflag &= ~ICANON; // Raw mode - read character by character
+    tty.c_lflag &= ~(ECHO | ECHONL | ISIG | IEXTEN);
+
+    // Timeout settings for raw mode
+    tty.c_cc[VMIN] = 8;   // wait for some chars
+    tty.c_cc[VTIME] = 15; // Timeout in deciseconds (1.5 seconds)
+
+    if (tcsetattr(listener, TCSANOW, &tty) != 0)
+    {
+        printf("tcsetattr error? \n");
+        perror("tcsetattr");
+
+        close(listener);
+        return -1;
+    }
+
+    tcflush(listener, TCIOFLUSH);
+    return 0;
+
+}
+
+
+
+int main(int argc, char *argv[]) 
+{
+
+
+    fd_set master; // master file descriptor list
+    fd_set read_fds; // temp file descriptor list
+    int fdmax;
+    int listener;
+
+    FD_ZERO(&master);
+    FD_ZERO(&read_fds);
+
+
 
     if (argv[1] == NULL)
     {
@@ -42,246 +210,34 @@ int main(int argc, char *argv[])
 
     strncpy(SERIAL_PORT, argv[1], strlen(argv[1]));
 
-    cb_init(&ser_cb);
-    cb_init(&sock_cb);
-
-    // open and setup serial port
-    int ser = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_SYNC);
-    if (ser < 0)
-    {
-        perror("unable to open serial port");
-        return -1;
-    }
-
-    // open and setup socket
-    int err = serialSetup(ser);
-    if (err != 0)
-    {   
-        perror("serial setup error");
-    }
-    set_nonblocking(ser);
-
-    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (sock == -1)
-    {
-        perror("unable to create socket");
-        close(sock);
-        return -1;
-    }
-    socketSetup(sock);
-
-    fd_set readfds;
-    fd_set writefds;
-
-    char tx[BUFFER_SIZE];
-    int bytes_read =0;
-
-    int attempts = 10;
-
-    while (1)
-    {
-
-        // collect active file descriptors
-        max_fd = 0;
-
-        FD_ZERO(&readfds);
-        FD_ZERO(&writefds);
-
-        // check serial for reading
-        FD_SET(ser, &readfds);
-        max_fd = MAX(ser, max_fd);
 
 
-        // removed because serial is non blocking and almost alwyas writeable???
-        // only check serial for writing if we have something to write
-        //if (!cb_is_empty(&sock_cb)) {
+    listener = get_listener_socket();
 
-        //    FD_SET(ser, &writefds);
-        //}
+    FD_SET(listener, &master);
 
+    fdmax = listener;
 
-
-        // check socket for new connections
-        FD_SET(sock, &readfds);
-        max_fd = MAX(sock, max_fd);
-
-
-        for (int i = 0; i < MAX_CONNECTIONS; i++)
+    for(;;) {
+        read_fds = master;
+        if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1)
         {
-            if (clients[i] != -1)
-            {
-                //printf("adding clients\r\n");
-                // if a client is valid check for reading
-                FD_SET(clients[i], &readfds);
-                max_fd = MAX(clients[i], max_fd);
+            perror("select");
+            exit(4);
+        }
 
-                //if (!cb_is_empty(&ser_cb)){
-                //    FD_SET(clients[i], &writefds);
-                //
-                //}
-
-
-
+        for(int i=0; i <= fdmax; i++) {
+            if (FD_ISSET(i, &read_fds)) {
+                if (i==listener) 
+                    handle_new_connection(i, &master, &fdmax);
+                else
+                    handle_client_data(i, listener, &master, fdmax);
             }
         }
 
-        struct timeval timeout = {0, 1000}; // 1000 = 1ms
-        //int activity = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
-        int activity = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
-
-        if (debug){
-            printf("act: %d\r\n", activity);
-        }
-
-        if (attempts == 0) {
-            perror("serial disconnected\r\n");
-            break;
-            }
-
-        if (activity < 0)
-        {
-            perror("select error\r\n");
-            break;
-        }
-
-        else if (activity == 0)
-        {   
-            if (debug) {
-                perror("timeout\r\n");
-            }
-            continue;
-        }
-
-        else
-        {
 
 
-
-            // serial handlers
-            if (FD_ISSET(ser, &readfds))
-            {
-                int read_n = readSerial(ser);
-
-                if (read_n <= 0) {
-                    attempts--;
-                    perror("serial read failed!");
-                    sleep(1);
-                }
-
-
-            }
-
-            
-
-
-            
-
-            // read sockets
-            for (int i = 0; i < MAX_CONNECTIONS; i++)
-            {
-                // if clients are valid and set
-                if (clients[i] != -1 && FD_ISSET(clients[i], &readfds))
-                {
-                    readSocket(clients[i]);
-                }
-            }
-
-            // if data available write sockets
-
-       
-            //}
-        
-
-
-            // new connection handler
-            // if socket is ready, trying to connect, accept a connection
-            if (FD_ISSET(sock, &readfds))
-            {
-
-                int new_client = accept(sock, NULL, NULL);
-                if (new_client < 0)
-                {
-                    perror("accept failed\r\n");
-                    continue;
-                }
-
-                set_nonblocking(new_client);
-                bool added = false;
-
-                // ADD to clients if its not taken
-                for (int i = 0; i < MAX_CONNECTIONS; i++)
-                {
-                    if (clients[i] < 0)
-                    { // -1
-                        clients[i] = new_client;
-                        added = true;
-                        printf("Client %d connected  (fd=%d)\n", i, clients[i]);
-                        break;
-                    }
-                }
-                if (!added)
-                {
-                    fprintf(stderr, "Max connections reached, rejecting client\n");
-                    close(new_client);
-                }
-            }
-
-            // remove old connections
-            for (int i = 0; i < MAX_CONNECTIONS; i++)
-            {
-
-                if (clients[i] != -1)
-                {
-
-                    char buf[1];
-                    int result = recv(clients[i], buf, 1, MSG_PEEK | MSG_DONTWAIT);
-                    if (result == 0)
-                    {
-                        printf("Client %d disconnected gracefully (fd=%d)\n", i, clients[i]);
-                        close(clients[i]);
-                        clients[i] = -1;
-                        continue;
-                    }
-
-                    if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
-                    {
-                        printf("Client %d error: %s\n", i, strerror(errno));
-                        close(clients[i]);
-                        clients[i] = -1;
-                        continue;
-                    }
-                }
-            }
-        }
-             
-        if (!cb_is_empty(&sock_cb))
-        {
-            writeSerial(ser);
-        }
-
-        if (!cb_is_empty(&ser_cb)) {
-            //while(!cb_is_empty(&ser_cb)) {
-            bytes_read = cb_read_chunk(&ser_cb, tx, BUFFER_SIZE);
-            if (bytes_read > 0) {
-                // Write to all writable clients
-                for (int i = 0; i < MAX_CONNECTIONS; i++) {
-                    if (clients[i] != -1 ) {
-                        writeSocket(clients[i], tx, bytes_read);
-                    }
-                }
-            }
-        }
     }
-
-
-    close(ser);
-    close(sock);
-    for (int i = 0; i < MAX_CONNECTIONS; i++)
-    {
-        if (clients[i] != -1)
-            close(clients[i]);
-    }
-
 
     return 0;
 }
