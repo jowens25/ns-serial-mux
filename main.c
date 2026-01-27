@@ -17,22 +17,23 @@
 
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 //
-//struct termios tty;
+struct termios tty;
 //int clients[MAX_CONNECTIONS] = {-1, -1, -1, -1};
 //int max_fd;
 int debug = false;
-//
-//char SERIAL_PORT[SERIAL_PORT_LEN] = {0};
+char SERIAL_PORT[SERIAL_PORT_LEN] = {0};
 
-void broadcast(char *buf, int nbytes, int listener, int s,
-               fd_set *master, int fdmax)
+
+
+
+void broadcast(char *buf, int nbytes, int serial, int listener, int s, fd_set *master, int fdmax)
 {
     for(int j = 0; j <= fdmax; j++) {
         // send to everyone!
         if (FD_ISSET(j, master)) {
             // except the listener and ourselves
-            if (j != listener && j != s) {
-                if (write(j, buf, nbytes) == -1) {
+            if (j != listener && j != s && j != serial) {
+                if (send(j, buf, nbytes, 0) == -1) {
                     perror("send");
                 }
             }
@@ -41,42 +42,14 @@ void broadcast(char *buf, int nbytes, int listener, int s,
 }
 
 
-void handle_client_data(int s, int listener, fd_set *master, int fdmax)
-{
-    char buf[256];
-    int nbytes;
 
-    if((nbytes = read(s, buf, sizeof(buf))) <= 0)
-    {
-        if (nbytes == 0) {
-            printf("sselect server: socket %d hung up\n", s);
-        } else {
-            perror("read");
-        }
-        close(s);
-        FD_CLR(s, master);
-    } else {
-        broadcast(buf, nbytes, listener, s, master, fdmax);
-    }
-}
 
-void handle_new_connection(int listener, fd_set *master, int *fdmax)
-{
 
-    int newfd;
 
-    newfd = accept(listener, NULL, NULL);
 
-    if (newfd == -1) {
-        perror("accept");
-    } else{
-        FD_SET(newfd, master);
-        if(newfd > *fdmax) {
-            *fdmax = newfd;
-        }
-        printf("select server: new connection on %d\n", newfd);
-    }
-}
+
+
+
 
 int get_listener_socket(void)
 {
@@ -86,13 +59,13 @@ int get_listener_socket(void)
     int rv;
     int listener;
 
+    unlink(SOCKET_PATH);
+
     memset(&addr, 0, sizeof(addr));
 
     addr.sun_family = AF_UNIX;
 
     strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1);
-
-    // skip getaddrinfo
 
     listener = socket(AF_UNIX, SOCK_STREAM, 0);
 
@@ -172,7 +145,8 @@ int get_listener_serial(void)
     }
 
     tcflush(listener, TCIOFLUSH);
-    return 0;
+    
+    return listener;
 
 }
 
@@ -185,7 +159,8 @@ int main(int argc, char *argv[])
     fd_set master; // master file descriptor list
     fd_set read_fds; // temp file descriptor list
     int fdmax;
-    int listener;
+    int listener_fd;
+    int serial_fd;
 
     FD_ZERO(&master);
     FD_ZERO(&read_fds);
@@ -211,12 +186,17 @@ int main(int argc, char *argv[])
     strncpy(SERIAL_PORT, argv[1], strlen(argv[1]));
 
 
+    listener_fd = get_listener_socket();
 
-    listener = get_listener_socket();
+    FD_SET(listener_fd, &master);
 
-    FD_SET(listener, &master);
+    serial_fd = get_listener_serial();
 
-    fdmax = listener;
+    FD_SET(serial_fd, &master);
+
+    fdmax = MAX(listener_fd, serial_fd);
+
+    //fdmax = listener;
 
     for(;;) {
         read_fds = master;
@@ -226,18 +206,101 @@ int main(int argc, char *argv[])
             exit(4);
         }
 
-        for(int i=0; i <= fdmax; i++) {
-            if (FD_ISSET(i, &read_fds)) {
-                if (i==listener) 
-                    handle_new_connection(i, &master, &fdmax);
-                else
-                    handle_client_data(i, listener, &master, fdmax);
+        char buf[256];
+        int nbytes;
+
+        for(int fd=0; fd <= fdmax; fd++) {
+            if (FD_ISSET(fd, &read_fds)) {
+                // handle new connections
+                if (fd==listener_fd) 
+                {
+                    int newfd;
+
+                    newfd = accept(listener_fd, NULL, NULL);
+                    if (newfd == -1) {
+                        perror("accept");
+                    } else{
+                    
+                        FD_SET(newfd, &master);
+                    
+                        if(newfd > fdmax) {
+                            fdmax = newfd;
+                        }
+                    
+                        printf("select server: new connection on %d\n", newfd);
+                    }
+
+                }
+                
+                if (fd==serial_fd) 
+                { 
+
+
+                    if((nbytes = read(serial_fd, buf, sizeof(buf))) <= 0)
+                    {
+                        if (nbytes == 0) {
+                            printf("serial no bytes");
+                        } else {
+                            perror("read");
+                        }
+                    
+                    } 
+                    else 
+                    {
+                        // for clients 
+                        for(int j = 0; j <= fdmax; j++) {
+                        // send to everyone!
+                            if (FD_ISSET(j, &master)) {
+                                // except the listener and serial
+                                if (j != listener_fd && j != serial_fd) {
+                                    if (write(j, buf, nbytes) == -1) {
+                                        perror("send");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // read then write to clients
+                else 
+                {
+                    if ((nbytes = read(fd, buf, sizeof buf)) <= 0) {
+                        // got error or connection closed by client
+                        if (nbytes == 0) {
+                            // connection closed
+                            printf("selectserver: socket %d hung up\n", fd);
+                        } else {
+                            perror("recv");
+                        }
+                        close(fd); // bye!
+                        FD_CLR(fd, &master); // remove from master set
+                    } else {
+                        // we got some data from a client
+                        broadcast(buf, nbytes, listener_fd, serial_fd, fd, &master, fdmax);
+                    }
+
+
+
+                }
+                //for(int j = 0; j <= fdmax; j++) {
+                //    // send to everyone!
+                //    if (FD_ISSET(j, &master)) {
+                //        // except the listener and ourselves
+                //        if (j != listener_fd && j != serial_fd) {
+                //            if (send(j, buf, nbytes, 0) == -1) {
+                //                perror("send");
+                //            }
+                //        }
+                //    }
+                //    }
+                //}
             }
         }
-
-
-
     }
+
+    close(serial_fd);
 
     return 0;
 }
+
+
