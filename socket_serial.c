@@ -67,11 +67,21 @@ void writeSerial(int ser)
 }
 
 // read socket client data in to socket buffer
-void readSocket(int client)
+void readSocket(int client, fd_set *master)
 {
-    int n = read(client, socket_chunk, CHUNK_SIZE);
-    if (n > 0)
-    {
+    int n;
+    if ((n = read(client, socket_chunk, CHUNK_SIZE)) <= 0) {
+        if (n == 0) {
+            // connection closed
+            printf("select server: socket %d hung up\n", client);
+        } else {
+            perror("read in readSocket");
+        }
+        close(client);
+        FD_CLR(client, master);
+    }
+
+    else {
         cb_write_chunk(&sock_cb, socket_chunk, n);
     }
 }
@@ -123,7 +133,7 @@ void writeSockets(int *clients, fd_set writefds, fd_set readfds)
     }
 }
 
-void socketSetup(int sock)
+int socketSetup(int sock)
 {
     // socket setup
     struct sockaddr_un addr;
@@ -142,8 +152,10 @@ void socketSetup(int sock)
         perror("listen failed");
         exit(1);
     }
-    set_nonblocking(sock);
+    //set_nonblocking(sock);
     printf("Serving %s on %s\r\n", SERIAL_PORT, SOCKET_PATH);
+
+    return sock;
 }
 
 int serialSetup(int fd)
@@ -194,12 +206,13 @@ int serialSetup(int fd)
     }
 
     tcflush(fd, TCIOFLUSH);
-    return 0;
+
+    return fd;
 }
 
-void set_nonblocking(int fd)
-{
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags != -1)
-        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-}
+//void set_nonblocking(int fd)
+//{
+//    //int flags = fcntl(fd, F_GETFL, 0);
+//    //if (flags != -1)
+//    //    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+//}

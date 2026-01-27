@@ -39,7 +39,7 @@ int serialSetup(int);
 int readSerial(int ser);
 void writeSerial(int ser);
 
-void readSocket(int client);
+void readSocket(int client, fd_set *master);
 // void writeSockets(int *clients, fd_set fds);
 void writeSockets(int *clients, fd_set writefds, fd_set readfds);
 void writeSocket(int client, char *tx, int bytes_read);
@@ -48,8 +48,8 @@ void removeClosedClients(void);
 
 void addNewConnections(int sock);
 
-void socketSetup(int sock);
+int socketSetup(int sock);
 
-void set_nonblocking(int fd);
+//void set_nonblocking(int fd);
 
 #endif // SOCKET_SERIAL_H
