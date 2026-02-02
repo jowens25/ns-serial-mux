@@ -1,0 +1,1 @@
+socat - UNIX-CONNECT:/run/ns/ns-socket-mux.sock
