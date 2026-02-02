@@ -13,18 +13,20 @@
 #include <ctype.h>
 #include <stddef.h>
 
-#define SOCKET_PATH "/tmp/serial.sock"
+#define SOCKET_PATH "/run/ns/ns-socket-mux.sock"
+
 // #define SERIAL_PORT "/dev/ttyUSB0"
 #define MAX_CONNECTIONS 4
 
-#define CHUNK_SIZE 256
+#define CHUNK_SIZE 1024
 #define SERIAL_PORT_LEN 128
 extern struct termios tty;
 // extern struct sockaddr_un addr;
 
 extern int clients[MAX_CONNECTIONS];
 
-extern char chunk[CHUNK_SIZE];
+
+
 // extern int index;
 extern int offset;
 extern int head;
@@ -39,7 +41,7 @@ int serialSetup(int);
 int readSerial(int ser);
 void writeSerial(int ser);
 
-void readSocket(int client);
+void readSocket(int client, fd_set *master);
 // void writeSockets(int *clients, fd_set fds);
 void writeSockets(int *clients, fd_set writefds, fd_set readfds);
 void writeSocket(int client, char *tx, int bytes_read);
@@ -48,7 +50,7 @@ void removeClosedClients(void);
 
 void addNewConnections(int sock);
 
-void socketSetup(int sock);
+int socketSetup(int sock);
 
 void set_nonblocking(int fd);
 
