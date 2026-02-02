@@ -2,7 +2,7 @@ Source: ns-socket-mux
 Section: utils
 Priority: optional
 Maintainer: Jacob Owens <jowens@novuspower.com>
-Build-Depends: debhelper-compat (= 13), gcc, libc6-dev
+Build-Depends: debhelper-compat (>=12), gcc, libc6-dev
 Standards-Version: 4.6.0
 
 Package: ns-socket-mux
