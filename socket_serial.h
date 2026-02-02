@@ -13,7 +13,6 @@
 #include <ctype.h>
 #include <stddef.h>
 
-#define SOCKET_PATH "/run/ns/ns-socket-mux.sock"
 
 // #define SERIAL_PORT "/dev/ttyUSB0"
 #define MAX_CONNECTIONS 4
@@ -24,6 +23,7 @@ extern struct termios tty;
 // extern struct sockaddr_un addr;
 
 extern int clients[MAX_CONNECTIONS];
+#define SOCKET_PATH "/run/ns/ns-socket-mux.sock"
 
 
 

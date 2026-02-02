@@ -12,7 +12,6 @@
 #include <stdbool.h>
 //
 
-#define SOCKET_PATH "/tmp/serial.sock"
 
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
@@ -25,7 +24,17 @@ int debug = false;
 	
 #define DEF_BUFSIZE 512 
 
+int ser;
+int sock;
+int fdmax;
 
+void clean_up(void) {
+    close(ser);
+    close(sock);
+    for(int i = 0; i <= fdmax; i++) { 
+            close(i);
+    }
+}
 
 
 char SERIAL_PORT[SERIAL_PORT_LEN] = {0};
@@ -221,6 +230,15 @@ void handle_serial(int client, int serial, int listener, fd_set *master, int fdm
                 }
             }
         }
+    } else if (n == 0) {
+        fprintf(stderr, "Serial port closed (EOF)\n");
+        clean_up();
+        exit(1);
+    } else {
+        // n < 0 means error
+        perror("read from serial port");
+        clean_up();
+        exit(1);
     }
 
 }
@@ -246,7 +264,6 @@ int main(int argc, char *argv[])
     fd_set master;
     FD_ZERO(&read_fds);
     FD_ZERO(&master);
-    int fdmax;
     int listener_fd;
     int serial_fd;
 
@@ -320,13 +337,8 @@ int main(int argc, char *argv[])
 
 
 
-    close(ser);
-    close(sock);
-    for (int i = 0; i < MAX_CONNECTIONS; i++)
-    {
-        if (clients[i] != -1)
-            close(clients[i]);
-    }
+
+    clean_up();
 
 
     return 0;
