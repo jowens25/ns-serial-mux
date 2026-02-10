@@ -1,4 +1,8 @@
+<<<<<<< HEAD:debian/.debhelper/generated/ns-serial-mux/dh_installchangelogs.dch.trimmed
 ns-serial-mux (1.0.14) UNRELEASED; urgency=medium
+=======
+ns-serial-mux (1.0.12) UNRELEASED; urgency=medium
+>>>>>>> 5b3f248c3a88b3893a4123426a4304ae77db51b8:debian/changelog.dch
 
   [ Jacob Owens ]
   * added logging
@@ -11,10 +15,16 @@ ns-serial-mux (1.0.14) UNRELEASED; urgency=medium
 
   [ jowens ]
   * updated conf stuff
+<<<<<<< HEAD:debian/.debhelper/generated/ns-serial-mux/dh_installchangelogs.dch.trimmed
   * updated conf again
   * updated paths run -> state 
 
  -- jowens <jowens@jowens>  Tue, 10 Feb 2026 14:24:52 -0600
+=======
+  * 
+
+ -- jowens <jowens@jowens>  Thu, 05 Feb 2026 13:45:50 -0600
+>>>>>>> 5b3f248c3a88b3893a4123426a4304ae77db51b8:debian/changelog.dch
 
 ns-socket-mux (1.0-1) noble; urgency=medium
 
