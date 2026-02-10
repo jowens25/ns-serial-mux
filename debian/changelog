@@ -1,4 +1,4 @@
-ns-serial-mux (1.0.15) UNRELEASED; urgency=medium
+ns-serial-mux (1.0.15) unstable; urgency=medium
 
   [ Jacob Owens ]
   * added logging
