@@ -1,0 +1,29 @@
+Format: 1.8
+Date: Thu, 19 Feb 2026 10:42:24 -0600
+Source: ns-serial-mux
+Binary: ns-serial-mux ns-serial-mux-dbgsym
+Architecture: arm64
+Version: 2.0.0
+Distribution: unstable
+Urgency: medium
+Maintainer: Jacob Owens <jowens@novuspower.com>
+Changed-By: root <root@rockpro64>
+Description:
+ ns-serial-mux - Serial port to socket bridge
+Changes:
+ ns-serial-mux (2.0.0) unstable; urgency=medium
+ .
+   [ root ]
+   * configs and groups
+Checksums-Sha1:
+ bec2217a93f2205aa0cd27fb5a9b07c6f546138f 7512 ns-serial-mux-dbgsym_2.0.0_arm64.deb
+ c50c9f725148e630ebff4f5a78fc979d2e830787 5306 ns-serial-mux_2.0.0_arm64.buildinfo
+ 5487a67536541b08fea7e79212851c53b9185794 6636 ns-serial-mux_2.0.0_arm64.deb
+Checksums-Sha256:
+ dc0f94ac74ea3a1057627920cd91ab8a42035912636840103b0531a8684d2249 7512 ns-serial-mux-dbgsym_2.0.0_arm64.deb
+ e0330c8f13026e1f64b95e5e6783046757bacb05ad47f3f58534d7390529ec85 5306 ns-serial-mux_2.0.0_arm64.buildinfo
+ 03c36d0c36d4714b8e9df68f067bc7e142eea7398cd0e09a0af3cb2218b5994f 6636 ns-serial-mux_2.0.0_arm64.deb
+Files:
+ c4ce58b615c33a1c59536b9308bb9ce3 7512 debug optional ns-serial-mux-dbgsym_2.0.0_arm64.deb
+ 357998fd74cf73a894fbee17c914db0a 5306 utils optional ns-serial-mux_2.0.0_arm64.buildinfo
+ d6848caa659650d1cfd22d83099cc53c 6636 utils optional ns-serial-mux_2.0.0_arm64.deb
