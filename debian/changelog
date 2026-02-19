@@ -1,12 +1,8 @@
-ns-serial-mux (2.0.0) UNRELEASED; urgency=medium
+ns-serial-mux (2.0.0) unstable; urgency=medium
+  [ root ]
+  * configs and groups 
 
-  * updated to group=dialout
-  * 
-  * 
-  * logs 
-  * clean up, next test
-
- -- jowens <jowens@jowens>  Thu, 19 Feb 2026 12:13:19 -0600
+ -- root <root@rockpro64>  Thu, 19 Feb 2026 10:42:24 -0600
 
 ns-serial-mux (1.0.16) unstable; urgency=medium
 
