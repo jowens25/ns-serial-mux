@@ -14,7 +14,7 @@ Checksums-Sha256:
  03c36d0c36d4714b8e9df68f067bc7e142eea7398cd0e09a0af3cb2218b5994f 6636 ns-serial-mux_2.0.0_arm64.deb
 Build-Origin: Debian
 Build-Architecture: arm64
-Build-Date: Thu, 19 Feb 2026 10:43:39 -0600
+Build-Date: Thu, 19 Feb 2026 14:52:50 -0600
 Build-Tainted-By:
  merged-usr-via-aliased-dirs
 Installed-Build-Depends:
