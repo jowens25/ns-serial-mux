@@ -1,11 +1,12 @@
-ns-serial-mux (1.1.0) UNRELEASED; urgency=medium
+ns-serial-mux (2.0.0) UNRELEASED; urgency=medium
 
   * updated to group=dialout
   * 
   * 
   * logs 
+  * clean up, next test
 
- -- jowens <jowens@jowens>  Thu, 19 Feb 2026 09:59:51 -0600
+ -- jowens <jowens@jowens>  Thu, 19 Feb 2026 12:13:19 -0600
 
 ns-serial-mux (1.0.16) unstable; urgency=medium
 
