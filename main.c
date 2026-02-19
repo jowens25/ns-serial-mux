@@ -219,7 +219,17 @@ void handle_socket(int client, int serial, int listener, fd_set *master, int fdm
         for(int i = 0; i <= fdmax; i++) {
             if(FD_ISSET(i, master)) {
                 if (i != client && i != listener){
+
+                    if (i == serial){
+                    syslog(LOG_INFO, "Write: %s\n", socket_buf);
+                    //printf("i == serial: %s\n", strerror(errno));
+
+                    }
+
                     write(i, socket_buf, n);
+
+                    //printf("p: %d\n", p);
+
                 }
             }
         }
@@ -364,5 +374,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
 

@@ -1,0 +1,13 @@
+Package: ns-serial-mux-dbgsym
+Package-Type: ddeb
+Source: ns-serial-mux
+Version: 1.1.0
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Jacob Owens <jowens@novuspower.com>
+Installed-Size: 22
+Depends: ns-serial-mux (= 1.1.0)
+Section: debug
+Priority: optional
+Description: debug symbols for ns-serial-mux
+Build-Ids: f197a80d9bea3ef31b2e71f7968543be9699f0c6

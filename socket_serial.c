@@ -62,6 +62,9 @@ int socketSetup(int sock)
     set_nonblocking(sock);
     printf("Serving %s on %s\r\n", SERIAL_PORT, SOCKET_PATH);
 
+    syslog(LOG_INFO, "Serving %s on %s", SERIAL_PORT, SOCKET_PATH);
+
+
     return sock;
 }
 

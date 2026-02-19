@@ -3,16 +3,16 @@ Date: Tue, 10 Feb 2026 14:47:53 -0600
 Source: ns-serial-mux
 Binary: ns-serial-mux
 Built-For-Profiles: noudeb
-Architecture: source amd64
+Architecture: amd64
 Version: 1.0.15
-Distribution: UNRELEASED
+Distribution: unstable
 Urgency: medium
 Maintainer: Jacob Owens <jowens@novuspower.com>
 Changed-By: jowens <jowens@jowens>
 Description:
  ns-serial-mux - Serial port to socket bridge
 Changes:
- ns-serial-mux (1.0.15) UNRELEASED; urgency=medium
+ ns-serial-mux (1.0.15) unstable; urgency=medium
  .
    [ Jacob Owens ]
    * added logging
@@ -29,20 +29,14 @@ Changes:
    * updated paths run -> state
    * package
 Checksums-Sha1:
- 6b48a255decc79191658ade1aaa36d14d5ed1a22 579 ns-serial-mux_1.0.15.dsc
- 2cd49e72c9066b75d57f2585c36b5bc9f47ba2c4 771102 ns-serial-mux_1.0.15.tar.gz
  6516595e44ef3c91b616d0ff584d8a873e5d2876 7612 ns-serial-mux-dbgsym_1.0.15_amd64.ddeb
- 470d7d1ed681d8b09509d36ff199bcbd20a9b65f 6420 ns-serial-mux_1.0.15_amd64.buildinfo
- c8c00dc6acb09ea03b9571b1e890afbbc7a7395d 7164 ns-serial-mux_1.0.15_amd64.deb
+ 0877d84eb3e8535320f979091d711d3788a0f29f 6311 ns-serial-mux_1.0.15_amd64.buildinfo
+ 28e31c0ebe40217dc4279142cb12c85473c37bae 7154 ns-serial-mux_1.0.15_amd64.deb
 Checksums-Sha256:
- 17ddb01938e7fa7d21faf3fc1ec2c40b8e1ed1eb75e9dfa74c05ef51f4d8a1f6 579 ns-serial-mux_1.0.15.dsc
- 0201282239e36cbfa3d64f58b5801f2f9d45d1ec94b5cf85187f952cba3e2382 771102 ns-serial-mux_1.0.15.tar.gz
  c976ebf8d355f8e5d11c914a4f81314da840de39148a3f56dfbe56b07bbd6e37 7612 ns-serial-mux-dbgsym_1.0.15_amd64.ddeb
- e493f84a9b882faee6055688dc48c00363ee5e2cb08a2ed0dd47109fd853d9f3 6420 ns-serial-mux_1.0.15_amd64.buildinfo
- 05fdafeee3147db0b3be4d133e5fde177fcf0ffd07e6dc323f8ee625acd09484 7164 ns-serial-mux_1.0.15_amd64.deb
+ 01ea12bed26e70985fa93cfbc30a6ef369ef9aeae0e7e1ea0a0d1fc2a4445de0 6311 ns-serial-mux_1.0.15_amd64.buildinfo
+ 5d7f7f92644fc0a951cdb82e2f5bbfec7635ae67906452b2d2631a16248026f9 7154 ns-serial-mux_1.0.15_amd64.deb
 Files:
- 6db54643c42b209a8b6d9a6fa23b0674 579 utils optional ns-serial-mux_1.0.15.dsc
- be04f8e4342ec4b754759d5ec4391e3a 771102 utils optional ns-serial-mux_1.0.15.tar.gz
  3400fe82edce7028629f1b990d281645 7612 debug optional ns-serial-mux-dbgsym_1.0.15_amd64.ddeb
- e732c2bba6ca705cdb5a4afbf0904568 6420 utils optional ns-serial-mux_1.0.15_amd64.buildinfo
- d04d57e0653a47e4322818eee4bd3dfe 7164 utils optional ns-serial-mux_1.0.15_amd64.deb
+ a21f8b0c95198a197a4b85901e5ccabe 6311 utils optional ns-serial-mux_1.0.15_amd64.buildinfo
+ 306f5eafd36c849a5d7bc5e0a13cb52e 7154 utils optional ns-serial-mux_1.0.15_amd64.deb

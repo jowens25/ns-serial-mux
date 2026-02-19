@@ -1,23 +1,20 @@
 Format: 1.0
 Source: ns-serial-mux
 Binary: ns-serial-mux ns-serial-mux-dbgsym
-Architecture: amd64 source
+Architecture: amd64
 Version: 1.0.15
 Checksums-Md5:
- 6db54643c42b209a8b6d9a6fa23b0674 579 ns-serial-mux_1.0.15.dsc
  3400fe82edce7028629f1b990d281645 7612 ns-serial-mux-dbgsym_1.0.15_amd64.ddeb
- d04d57e0653a47e4322818eee4bd3dfe 7164 ns-serial-mux_1.0.15_amd64.deb
+ 306f5eafd36c849a5d7bc5e0a13cb52e 7154 ns-serial-mux_1.0.15_amd64.deb
 Checksums-Sha1:
- 6b48a255decc79191658ade1aaa36d14d5ed1a22 579 ns-serial-mux_1.0.15.dsc
  6516595e44ef3c91b616d0ff584d8a873e5d2876 7612 ns-serial-mux-dbgsym_1.0.15_amd64.ddeb
- c8c00dc6acb09ea03b9571b1e890afbbc7a7395d 7164 ns-serial-mux_1.0.15_amd64.deb
+ 28e31c0ebe40217dc4279142cb12c85473c37bae 7154 ns-serial-mux_1.0.15_amd64.deb
 Checksums-Sha256:
- 17ddb01938e7fa7d21faf3fc1ec2c40b8e1ed1eb75e9dfa74c05ef51f4d8a1f6 579 ns-serial-mux_1.0.15.dsc
  c976ebf8d355f8e5d11c914a4f81314da840de39148a3f56dfbe56b07bbd6e37 7612 ns-serial-mux-dbgsym_1.0.15_amd64.ddeb
- 05fdafeee3147db0b3be4d133e5fde177fcf0ffd07e6dc323f8ee625acd09484 7164 ns-serial-mux_1.0.15_amd64.deb
+ 5d7f7f92644fc0a951cdb82e2f5bbfec7635ae67906452b2d2631a16248026f9 7154 ns-serial-mux_1.0.15_amd64.deb
 Build-Origin: Ubuntu
 Build-Architecture: amd64
-Build-Date: Tue, 10 Feb 2026 15:01:34 -0600
+Build-Date: Thu, 19 Feb 2026 08:48:10 -0600
 Build-Tainted-By:
  merged-usr-via-aliased-dirs
  usr-local-has-programs
@@ -58,6 +55,7 @@ Installed-Build-Depends:
  g++-13 (= 13.3.0-6ubuntu2~24.04),
  g++-13-x86-64-linux-gnu (= 13.3.0-6ubuntu2~24.04),
  g++-x86-64-linux-gnu (= 4:13.2.0-7ubuntu1),
+ gawk (= 1:5.2.1-2build3),
  gcc (= 4:13.2.0-7ubuntu1),
  gcc-13 (= 13.3.0-6ubuntu2~24.04),
  gcc-13-base (= 13.3.0-6ubuntu2~24.04),
@@ -132,9 +130,11 @@ Installed-Build-Depends:
  libperl5.38t64 (= 5.38.2-3.2ubuntu0.2),
  libpipeline1 (= 1.5.7-2),
  libquadmath0 (= 14.2.0-4ubuntu2~24.04),
+ libreadline8t64 (= 8.2-4build1),
  libseccomp2 (= 2.5.5-1ubuntu3.1),
  libselinux1 (= 3.5-2ubuntu2.1),
  libsframe1 (= 2.42-4ubuntu2.8),
+ libsigsegv2 (= 2.14-1ubuntu2),
  libsmartcols1 (= 2.39.3-9ubuntu6.4),
  libssl3t64 (= 3.0.13-0ubuntu3.7),
  libstdc++-13-dev (= 13.3.0-6ubuntu2~24.04),
@@ -165,6 +165,7 @@ Installed-Build-Depends:
  perl-base (= 5.38.2-3.2ubuntu0.2),
  perl-modules-5.38 (= 5.38.2-3.2ubuntu0.2),
  po-debconf (= 1.0.21+nmu1),
+ readline-common (= 8.2-4build1),
  rpcsvc-proto (= 1.4.2-0ubuntu7),
  sed (= 4.9-2build1),
  sensible-utils (= 0.0.22),

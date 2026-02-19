@@ -1,7 +1,7 @@
 #!/bin/bash
 dpkg-buildpackage -us -uc -b
 
-mv ../*.dsc ../*.tar.* ../*.buildinfo ../*.changes dist/
+mv ../*.dsc ../*.deb ../*.ddeb ../*.tar.* ../*.buildinfo ../*.changes dist/
 
 
 
