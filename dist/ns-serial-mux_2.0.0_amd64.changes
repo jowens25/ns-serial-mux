@@ -1,0 +1,30 @@
+Format: 1.8
+Date: Thu, 19 Feb 2026 10:42:24 -0600
+Source: ns-serial-mux
+Binary: ns-serial-mux
+Built-For-Profiles: noudeb
+Architecture: amd64
+Version: 2.0.0
+Distribution: unstable
+Urgency: medium
+Maintainer: Jacob Owens <jowens@novuspower.com>
+Changed-By: root <root@rockpro64>
+Description:
+ ns-serial-mux - Serial port to socket bridge
+Changes:
+ ns-serial-mux (2.0.0) unstable; urgency=medium
+ .
+   [ root ]
+   * configs and groups
+Checksums-Sha1:
+ a2e6af1e293af4ff74e51c2a2f53e527f824c3de 7634 ns-serial-mux-dbgsym_2.0.0_amd64.ddeb
+ 4eb4c0917f1eb34d54835897fc46670ffab38434 6348 ns-serial-mux_2.0.0_amd64.buildinfo
+ b4365d2dfcbb15ad0b673e0430c3fcdde69e05c2 7244 ns-serial-mux_2.0.0_amd64.deb
+Checksums-Sha256:
+ 6e034e1a1ecdc1dd3eba009836e3488940c0070478ace1da3a289b25c298e08f 7634 ns-serial-mux-dbgsym_2.0.0_amd64.ddeb
+ e12ee70d916e88ac3e84821a6b5180b0c89a2bf8bc62e9a120ee42a23d30e252 6348 ns-serial-mux_2.0.0_amd64.buildinfo
+ 1f65e59e267b80f16187d521d264ddac90727e1a8956754ada344739e6e4e180 7244 ns-serial-mux_2.0.0_amd64.deb
+Files:
+ 81faf21e45165bdea55dab34d374c31e 7634 debug optional ns-serial-mux-dbgsym_2.0.0_amd64.ddeb
+ 0240fe0f8ccc6cf4ffa61f1d1658beba 6348 utils optional ns-serial-mux_2.0.0_amd64.buildinfo
+ 9e76c90d059942fb80ca1fae58094148 7244 utils optional ns-serial-mux_2.0.0_amd64.deb

@@ -1,3 +1,9 @@
+ns-serial-mux (2.0.4) UNRELEASED; urgency=medium
+
+  * init internal release 
+
+ -- jowens <jowens@jowens>  Thu, 26 Feb 2026 09:48:50 -0600
+
 ns-serial-mux (2.0.0) unstable; urgency=medium
   [ root ]
   * configs and groups 
