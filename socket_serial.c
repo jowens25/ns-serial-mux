@@ -30,7 +30,6 @@
 #include <stdbool.h>
 #include <syslog.h>
 
-
 int socketSetup(int sock)
 {
     // socket setup
@@ -52,7 +51,7 @@ int socketSetup(int sock)
         perror("listen failed");
         exit(1);
     }
-    
+
     // Set socket permissions to allow all users to connect
     if (chmod(SOCKET_PATH, 0666) == -1)
     {
@@ -63,7 +62,6 @@ int socketSetup(int sock)
     printf("Serving %s on %s\r\n", SERIAL_PORT, SOCKET_PATH);
 
     syslog(LOG_INFO, "Serving %s on %s", SERIAL_PORT, SOCKET_PATH);
-
 
     return sock;
 }
@@ -80,8 +78,8 @@ int serialSetup(int fd)
         return -1;
     }
 
-    cfsetospeed(&tty, B38400);
-    cfsetispeed(&tty, B38400);
+    cfsetospeed(&tty, B115200);
+    cfsetispeed(&tty, B115200);
 
     // 8N1 configuration
     tty.c_cflag &= ~CSIZE;
@@ -103,7 +101,7 @@ int serialSetup(int fd)
     tty.c_lflag &= ~(ECHO | ECHONL | ISIG | IEXTEN);
 
     // Timeout settings for raw mode
-    tty.c_cc[VMIN] = 0;   // wait for some chars
+    tty.c_cc[VMIN] = 0;  // wait for some chars
     tty.c_cc[VTIME] = 0; // Timeout in deciseconds (1.5 seconds)
 
     if (tcsetattr(fd, TCSANOW, &tty) != 0)
