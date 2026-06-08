@@ -12,117 +12,119 @@
 #include <stdbool.h>
 #include <syslog.h>
 
-
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 #define SERIAL_PORT_PARM "SERIAL_PORT"
+#define SOCKET_PATH_PARM "SOCKET_PATH"
 
 struct termios tty;
-//int clients[MAX_CONNECTIONS] = {-1, -1, -1, -1};
-//int max_fd;
+// int clients[MAX_CONNECTIONS] = {-1, -1, -1, -1};
+// int max_fd;
 int debug = false;
-	
-#define DEF_BUFSIZE 512 
+
+#define DEF_BUFSIZE 512
 
 int ser;
 int sock;
 int fdmax;
 
-void clean_up(void) {
+void clean_up(void)
+{
     close(ser);
     close(sock);
-    for(int i = 0; i <= fdmax; i++) { 
-            close(i);
+    for (int i = 0; i <= fdmax; i++)
+    {
+        close(i);
     }
-    
-    closelog();
 
+    closelog();
 }
 
-
 char SERIAL_PORT[SERIAL_PORT_LEN] = {0};
+char SOCKET_PATH[SERIAL_PORT_LEN] = {0};
 
 int getrval(char *sstr, char *rval)
 {
-	int retVal = 0; // Error 
-	char *eq;
-	char *q;
-	if (sstr && rval)
-	{
-		if ((eq = strchr(sstr, '=')) != NULL)
-		{
-			strcpy(rval, eq+1);
-			ltrim(rval);
-			rtrim(rval);
+    int retVal = 0; // Error
+    char *eq;
+    char *q;
+    if (sstr && rval)
+    {
+        if ((eq = strchr(sstr, '=')) != NULL)
+        {
+            strcpy(rval, eq + 1);
+            ltrim(rval);
+            rtrim(rval);
 
-			// Strip any quotes
+            // Strip any quotes
 
-			if (rval[0] == '\"')
-			{
-				strcpy(&rval[0], &rval[1]);
-				if ((q = strchr(rval, '\"')) != NULL)
-					*q = 0;
-			}
-				
-			retVal = 1;
-		}
-	}
+            if (rval[0] == '\"')
+            {
+                strcpy(&rval[0], &rval[1]);
+                if ((q = strchr(rval, '\"')) != NULL)
+                    *q = 0;
+            }
 
-	return retVal;
-}	
+            retVal = 1;
+        }
+    }
 
-char* rtrim(char* string)
+    return retVal;
+}
+
+char *rtrim(char *string)
 {
     int i = strlen(string) - 1;
 
-    while (i)
-    { 
-       if (string[i] == ' ')
-       {
+    while (i >= 0)
+    {
+        if (string[i] == ' ' || string[i] == '\n' || string[i] == '\r' || string[i] == '\t')
+        {
             string[i] = 0;
             i--;
-       } else {
+        }
+        else
+        {
             break;
-       } 
+        }
     }
 
     return string;
 }
 
-
 int getlval(char *sstr, char *lval)
 {
-	int retVal = 0; // Error 
-	char *eq;
+    int retVal = 0; // Error
+    char *eq;
 
-	if (sstr && lval)
-	{
-		if ((eq = strchr(sstr, '=')) != NULL)
-		{
-			memcpy(lval, sstr, eq - sstr);
-			lval[eq - sstr] = 0;
+    if (sstr && lval)
+    {
+        if ((eq = strchr(sstr, '=')) != NULL)
+        {
+            memcpy(lval, sstr, eq - sstr);
+            lval[eq - sstr] = 0;
 
-			ltrim(lval);
-			rtrim(lval);
-			retVal = 1;
-		}
-	}
+            ltrim(lval);
+            rtrim(lval);
+            retVal = 1;
+        }
+    }
 
-	return retVal;
+    return retVal;
 }
 
-char* ltrim(char *string)
+char *ltrim(char *string)
 {
-    while (string[0] == ' ')
-    	strcpy(&string[0], &string[1]);
-
+    int i = 0;
+    while (string[i] == ' ' || string[i] == '\t')
+        i++;
+    if (i > 0)
+        memmove(string, string + i, strlen(string + i) + 1);
     return string;
 }
 
-
-
-
-void read_serial_port_from_conf(void) {
+void read_config(void)
+{
 
     FILE *fp = NULL;
     char aline[DEF_BUFSIZE];
@@ -130,21 +132,25 @@ void read_serial_port_from_conf(void) {
     char *aptr = aline;
     char rval[512], lval[512];
 
-    if ((fp = fopen(CONFIG_FILE, "rb")) != NULL) {
+    if ((fp = fopen(CONFIG_FILE, "rb")) != NULL)
+    {
 
-        while((getline(&aptr, &alen, fp)) != -1) {
+        while ((getline(&aptr, &alen, fp)) != -1)
+        {
 
             ltrim(aline);
-			rtrim(aline);
+            rtrim(aline);
 
             if (aline[0] == '#' || aline[0] == 0)
-			{
-				// Ignore comment lines
-			} else {
-				if (getlval(aline, lval) && getrval(aline, rval))
-				{
-					if (strcasecmp(lval, SERIAL_PORT_PARM) == 0)
-					{
+            {
+                // Ignore comment lines
+            }
+            else
+            {
+                if (getlval(aline, lval) && getrval(aline, rval))
+                {
+                    if (strcasecmp(lval, SERIAL_PORT_PARM) == 0)
+                    {
 
                         int ser = open(rval, O_RDWR | O_NOCTTY | O_SYNC);
 
@@ -152,50 +158,46 @@ void read_serial_port_from_conf(void) {
                         {
                             syslog(LOG_ERR, "Unable to open serial port: %s trying other lines... ", strerror(errno));
                             perror(SERIAL_PORT);
-
-                        } else {
-                            syslog(LOG_INFO, "%s", rval);
-
-						    strcpy(SERIAL_PORT, rval);
-                            break;
-
                         }
+                        else
+                        {
+                            syslog(LOG_INFO, "Using serial port: %s", rval);
+                            strcpy(SERIAL_PORT, rval);
+                        }
+                    }
 
+                    if (strcasecmp(lval, SOCKET_PATH_PARM) == 0)
+                    {
 
-			        } 
-				
-				}
-			}
-
-
-
+                        syslog(LOG_INFO, "Using socket path: %s", rval);
+                        strcpy(SOCKET_PATH, rval);
+                    }
+                }
+            }
         }
-
     }
-
 }
-
-
-
-
-
 
 void handle_new_connection(int listener, fd_set *master, int *fdmax)
 {
-	int newfd;        // newly accept()ed socket descriptor
+    int newfd; // newly accept()ed socket descriptor
     newfd = accept(listener, NULL, NULL);
 
     set_nonblocking(newfd);
 
-	if (newfd == -1) {
-		perror("accept");
-	} else {
-		FD_SET(newfd, master); // add to master set
-		if (newfd > *fdmax) {  // keep track of the max
-			*fdmax = newfd;
-		}
-		printf("selectserver: new connection on socket %d\n", newfd);
-	}
+    if (newfd == -1)
+    {
+        perror("accept");
+    }
+    else
+    {
+        FD_SET(newfd, master); // add to master set
+        if (newfd > *fdmax)
+        { // keep track of the max
+            *fdmax = newfd;
+        }
+        printf("selectserver: new connection on socket %d\n", newfd);
+    }
 }
 
 // socket is ready, read from it, write to serial and other sockets
@@ -203,11 +205,15 @@ void handle_socket(int client, int serial, int listener, fd_set *master, int fdm
 {
     char socket_buf[CHUNK_SIZE];
     int n;
-    if ((n = read(client, socket_buf, CHUNK_SIZE)) <= 0) {
-        if (n == 0) {
+    if ((n = read(client, socket_buf, CHUNK_SIZE)) <= 0)
+    {
+        if (n == 0)
+        {
             // connection closed
             printf("select server: socket %d hung up\n", client);
-        } else {
+        }
+        else
+        {
             perror("read in readSocket");
         }
         printf("closing: %d\n", client);
@@ -215,21 +221,24 @@ void handle_socket(int client, int serial, int listener, fd_set *master, int fdm
         FD_CLR(client, master);
     }
 
-    else {
-        for(int i = 0; i <= fdmax; i++) {
-            if(FD_ISSET(i, master)) {
-                if (i != client && i != listener){
+    else
+    {
+        for (int i = 0; i <= fdmax; i++)
+        {
+            if (FD_ISSET(i, master))
+            {
+                if (i != client && i != listener)
+                {
 
-                    if (i == serial){
-                    syslog(LOG_INFO, "Write: %s\n", socket_buf);
-                    //printf("i == serial: %s\n", strerror(errno));
-
+                    if (i == serial)
+                    {
+                        syslog(LOG_INFO, "Write: %s\n", socket_buf);
+                        // printf("i == serial: %s\n", strerror(errno));
                     }
 
                     write(i, socket_buf, n);
 
-                    //printf("p: %d\n", p);
-
+                    // printf("p: %d\n", p);
                 }
             }
         }
@@ -241,55 +250,57 @@ void handle_serial(int client, int serial, int listener, fd_set *master, int fdm
 {
     char serial_buf[CHUNK_SIZE];
     int n = read(serial, serial_buf, CHUNK_SIZE);
-    //printf("n: %d\n", n);
+    // printf("n: %d\n", n);
 
-    //printf("%s\n", serial_buf);
+    // printf("%s\n", serial_buf);
 
     if (n > 0)
     {
-        for(int i = 0; i <= fdmax; i++) {
-            if(FD_ISSET(i, master)) {
-                if (i != listener && i != serial){
-                    //printf("writing to: %d\n", i);
+        for (int i = 0; i <= fdmax; i++)
+        {
+            if (FD_ISSET(i, master))
+            {
+                if (i != listener && i != serial)
+                {
+                    // printf("writing to: %d\n", i);
                     write(i, serial_buf, n);
                 }
             }
         }
-    } else if (n == 0) {
+    }
+    else if (n == 0)
+    {
         fprintf(stderr, "Serial port closed (EOF)\n");
         clean_up();
-        exit(1);
-    } else {
+        exit(2);
+    }
+    else
+    {
         // n < 0 means error
         perror("read from serial port");
         clean_up();
         exit(1);
     }
-
 }
 
-
-
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
 
     openlog("ns-serial-mux", LOG_PID | LOG_NDELAY, LOG_DAEMON);
-    
 
-    read_serial_port_from_conf();
+    read_config();
 
     syslog(LOG_INFO, "Using serial port: %s", SERIAL_PORT);
 
+    if (argv[2] != NULL)
+    {
 
-    if (argv[2] != NULL) {
-
-        if ( strncmp(argv[2], "debug", 5) == 0) {
+        if (strncmp(argv[2], "debug", 5) == 0)
+        {
             debug = true;
             printf("DEBUGGING\r\n");
         }
-
     }
-
 
     fd_set read_fds;
     fd_set master;
@@ -297,8 +308,6 @@ int main(int argc, char *argv[])
     FD_ZERO(&master);
     int listener_fd;
     int serial_fd;
-
-
 
     int ser = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_SYNC);
     if (ser < 0)
@@ -312,7 +321,6 @@ int main(int argc, char *argv[])
     set_nonblocking(serial_fd);
     FD_SET(serial_fd, &master);
 
-
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock == -1)
     {
@@ -324,54 +332,50 @@ int main(int argc, char *argv[])
     set_nonblocking(listener_fd);
     FD_SET(listener_fd, &master);
 
-
     fdmax = listener_fd > serial_fd ? listener_fd : serial_fd;
-
-
 
     while (1)
     {
-
 
         struct timeval tv;
         tv.tv_sec = 0;
         tv.tv_usec = 100; // 100ms
 
-
         read_fds = master; // copy it
-		if (select(fdmax+1, &read_fds, NULL, NULL, &tv) == -1) {
+        if (select(fdmax + 1, &read_fds, NULL, NULL, &tv) == -1)
+        {
             syslog(LOG_ERR, "Select: %s", strerror(errno));
             clean_up();
-			exit(4);
-		}
+            exit(4);
+        }
 
-
-		// run through the existing connections looking for data
-		// to read
-		for(int i = 0; i <= fdmax; i++) {
-			if (FD_ISSET(i, &read_fds)) { // we got one!!
-				if (i == listener_fd) { // new connection available
-					handle_new_connection(i, &master, &fdmax);
+        // run through the existing connections looking for data
+        // to read
+        for (int i = 0; i <= fdmax; i++)
+        {
+            if (FD_ISSET(i, &read_fds))
+            { // we got one!!
+                if (i == listener_fd)
+                { // new connection available
+                    handle_new_connection(i, &master, &fdmax);
                 }
-                
-                else if (i == serial_fd) { // serial ready!
+
+                else if (i == serial_fd)
+                { // serial ready!
                     handle_serial(i, serial_fd, listener_fd, &master, fdmax);
                 }
-				
-                else { // a socket file descriptor is ready!
-					handle_socket(i, serial_fd, listener_fd, &master, fdmax);
+
+                else
+                { // a socket file descriptor is ready!
+                    handle_socket(i, serial_fd, listener_fd, &master, fdmax);
                 }
-			}
-		}
-	}
-
-
-
+            }
+        }
+    }
 
     clean_up();
-    
+
     syslog(LOG_ERR, "END: %s", strerror(errno));
 
     return 0;
 }
-

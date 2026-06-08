@@ -1,42 +1,5 @@
-ns-serial-mux (2.0.4) UNRELEASED; urgency=medium
-
-  * init internal release 
-
- -- jowens <jowens@jowens>  Thu, 26 Feb 2026 09:48:50 -0600
-
-ns-serial-mux (2.0.0) unstable; urgency=medium
-  [ root ]
-  * configs and groups 
-
- -- root <root@rockpro64>  Thu, 19 Feb 2026 10:42:24 -0600
-
-ns-serial-mux (1.0.16) unstable; urgency=medium
-
-  * service added to dialout group 
-
- -- jowens <jowens@jowens>  Thu, 19 Feb 2026 08:58:42 -0600
-
-ns-serial-mux (1.0.15) unstable; urgency=medium
-
-  [ Jacob Owens ]
+ns-serial-mux (2.0.8) UNRELEASED; urgency=medium
+  [jowens]
   * added logging
-  * changed name
-  * working to fix up serial port and socket addresses
-  * rev up
-  * fixed service file paths and binary names
-  * updated RuntimeDirectoryMode to 0777 for user access to socket
-  * added chmod(0666) to socket creation for user permissions
 
-  [ jowens ]
-  * updated conf stuff
-  * updated conf again
-  * updated paths run -> state 
-  * package
-
- -- jowens <jowens@jowens>  Tue, 10 Feb 2026 14:47:53 -0600
-
-ns-socket-mux (1.0-1) noble; urgency=medium
-
-  * Initial release.
-
- -- Jacob Owens <jowens@novuspower.com>  Mon, 02 Feb 2026 13:00:41 -0600
+ -- jowens <jowens@jowens>  Mon, 08 Jun 2026 11:12:24 -0500

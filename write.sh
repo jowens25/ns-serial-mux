@@ -1,1 +1,1 @@
-echo '$BAUDNV' | socat - UNIX-CONNECT:/var/lib/ns/ns-serial-mux.sock
+echo "{$1}" | socat - UNIX-CONNECT:/var/lib/ns/ns-serial-mux.sock

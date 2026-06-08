@@ -13,7 +13,6 @@
 #include <ctype.h>
 #include <stddef.h>
 
-
 // #define SERIAL_PORT "/dev/ttyUSB0"
 #define MAX_CONNECTIONS 4
 
@@ -23,9 +22,9 @@ extern struct termios tty;
 // extern struct sockaddr_un addr;
 
 extern int clients[MAX_CONNECTIONS];
-#define SOCKET_PATH "/var/lib/ns/ns-serial-mux.sock"
+// #define SOCKET_PATH "/var/lib/ns/ns-serial-mux.sock"
 
-
+extern char SOCKET_PATH[SERIAL_PORT_LEN];
 
 // extern int index;
 extern int offset;
