@@ -1,3 +1,3 @@
-e324b10f79abf3bbe0ddd5e12780902a  usr/bin/ns-serial-mux
+8af94866e72bf9219aad6504b667c190  usr/bin/ns-serial-mux
 0507ce3070f195b437849a4c50190ab0  usr/lib/systemd/system/ns-serial-mux.service
-2a32514f14b4ae61f0a8e8b5986abb35  usr/share/doc/ns-serial-mux/changelog.gz
+4506270c3cecbd4903e82d342240495b  usr/share/doc/ns-serial-mux/changelog.gz
