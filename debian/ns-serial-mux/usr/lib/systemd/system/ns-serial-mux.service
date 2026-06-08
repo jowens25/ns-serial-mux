@@ -1,14 +1,15 @@
 [Unit]
 Description=Serial to Socket Mux
 After=network.target
+StartLimitIntervalSec=30
+StartLimitBurst=2
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/ns-serial-mux
-Restart=always         # Automatically restart on exit
-RestartSec=5s          # Wait 5 seconds before restarting
-StartLimitIntervalSec=30 # Limit restarts within this window (e.g., 30s)
-StartLimitBurst=2      # Allow 2 restarts within that window before stopping
+Restart=always
+RestartSec=5s
+
 StateDirectory=ns
 StateDirectoryMode=0777
 

@@ -1,0 +1,31 @@
+#!/bin/sh
+# debian/preinst script for package_name
+set -e
+
+case "$1" in
+    install)
+        # Actions performed on a clean, fresh installation
+        echo "Preparing system for fresh installation..."
+        systemctl disable variscite-bt.service
+        echo "Disabled variscite-by.service"
+                
+
+    upgrade)
+        # Actions performed when upgrading from an older version
+        # $2 contains the version currently installed
+        echo "Upgrading package from version $2..."
+        ;;
+
+    abort-upgrade)
+        # Actions performed if the upgrade fails and dpkg rolls back
+        echo "Upgrade aborted. Rolling back to previous state."
+        ;;
+
+    *)
+        echo "preinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+# Exit with 0 to signal success to dpkg
+exit 0
