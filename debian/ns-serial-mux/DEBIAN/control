@@ -1,8 +1,8 @@
 Package: ns-serial-mux
-Version: 2.0.10
+Version: 2.0.17
 Architecture: amd64
 Maintainer: Jacob Owens <jowens@novuspower.com>
-Installed-Size: 39
+Installed-Size: 40
 Depends: libc6 (>= 2.34)
 Section: utils
 Priority: optional

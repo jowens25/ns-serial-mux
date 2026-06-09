@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    remove|upgrade)
+        # On upgrade or remove, just reload nginx to pick up config changes
+        #rm -f /etc/ns/ns-serial-mux.conf
+        ;;
+    purge)
+        rm -f /etc/ns/ns-serial-mux.conf
+        ;;
+    failed-upgrade|abort-install|abort-remove|disappear)
+        ;;
+    *)
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

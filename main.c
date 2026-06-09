@@ -130,7 +130,7 @@ void read_config(void)
     char aline[DEF_BUFSIZE];
     size_t alen = DEF_BUFSIZE - 1;
     char *aptr = aline;
-    char rval[512], lval[512];
+    char rval[512], lval[512] = {0};
 
     if ((fp = fopen(CONFIG_FILE, "rb")) != NULL)
     {
@@ -156,7 +156,7 @@ void read_config(void)
 
                         if (ser < 0)
                         {
-                            syslog(LOG_ERR, "Unable to open serial port: %s trying other lines... ", strerror(errno));
+                            syslog(LOG_INFO, "Unable to open serial port: %s trying other lines... ", strerror(errno));
                             perror(SERIAL_PORT);
                         }
                         else
@@ -271,15 +271,17 @@ void handle_serial(int client, int serial, int listener, fd_set *master, int fdm
     else if (n == 0)
     {
         fprintf(stderr, "Serial port closed (EOF)\n");
-        clean_up();
-        exit(2);
+        syslog(LOG_INFO, "serial read error (EOF) (n==0) on %s", SERIAL_PORT);
+        closelog();
+        exit(-2);
     }
     else
     {
         // n < 0 means error
+        syslog(LOG_INFO, "serial read error (n<0) on %s", SERIAL_PORT);
         perror("read from serial port");
-        clean_up();
-        exit(1);
+        closelog();
+        exit(-1);
     }
 }
 
@@ -312,8 +314,12 @@ int main(int argc, char *argv[])
     int ser = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_SYNC);
     if (ser < 0)
     {
-        syslog(LOG_ERR, "Unable to open serial port: %s", strerror(errno));
-        return -1;
+        syslog(LOG_INFO, "Serial port: %s", SERIAL_PORT);
+        syslog(LOG_INFO, "Unable to open serial port: %s", strerror(errno));
+
+        closelog();
+
+        exit(1);
     }
 
     serial_fd = serialSetup(ser);
@@ -326,7 +332,9 @@ int main(int argc, char *argv[])
     {
         perror("unable to create socket");
         close(sock);
-        return -1;
+        closelog();
+
+        exit(2);
     }
     listener_fd = socketSetup(sock);
     set_nonblocking(listener_fd);
@@ -344,9 +352,9 @@ int main(int argc, char *argv[])
         read_fds = master; // copy it
         if (select(fdmax + 1, &read_fds, NULL, NULL, &tv) == -1)
         {
-            syslog(LOG_ERR, "Select: %s", strerror(errno));
+            syslog(LOG_INFO, "Select: %s", strerror(errno));
             clean_up();
-            exit(4);
+            exit(3);
         }
 
         // run through the existing connections looking for data
@@ -375,7 +383,7 @@ int main(int argc, char *argv[])
 
     clean_up();
 
-    syslog(LOG_ERR, "END: %s", strerror(errno));
+    syslog(LOG_INFO, "END: %s", strerror(errno));
 
     return 0;
 }

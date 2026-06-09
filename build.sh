@@ -1,4 +1,6 @@
 #!/bin/bash
+rm -rf dist/*
+
 dpkg-buildpackage -us -uc -b
 
 mv ../*.dsc ../*.deb ../*.ddeb ../*.tar.* ../*.buildinfo ../*.changes dist/

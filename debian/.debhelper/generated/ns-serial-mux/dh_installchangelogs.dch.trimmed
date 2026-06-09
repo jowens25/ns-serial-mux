@@ -1,6 +1,13 @@
-ns-serial-mux (2.0.10) UNRELEASED; urgency=medium
+ns-serial-mux (2.0.17) UNRELEASED; urgency=medium
   [jowens]
   * added logging
   * 2.0.10 release
+  * added bt check 
+  * added log statements 
+  * added clean up 
+  * added exit() 
+  * added postrm
+  * fixed script
+  * trying to fix stat
 
- -- jowens <jowens@jowens>  Mon, 08 Jun 2026 11:19:03 -0500
+ -- jowens <jowens@jowens>  Tue, 09 Jun 2026 09:16:56 -0500
