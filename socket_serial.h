@@ -35,7 +35,7 @@ extern char SERIAL_PORT[SERIAL_PORT_LEN];
 int serRead(int ser, char data[], size_t dataLength);
 int serWrite(int ser, char data[], size_t dataLength);
 
-int serialSetup(int);
+int serialSetup(int fd, int baud);
 
 int readSerial(int ser);
 void writeSerial(int ser);

@@ -66,7 +66,7 @@ int socketSetup(int sock)
     return sock;
 }
 
-int serialSetup(int fd)
+int serialSetup(int fd, int baud)
 {
     // printf("setup termios\n");
     memset(&tty, 0, sizeof tty);
@@ -78,8 +78,16 @@ int serialSetup(int fd)
         return -1;
     }
 
-    cfsetospeed(&tty, B115200);
-    cfsetispeed(&tty, B115200);
+    if (baud == 115200)
+    {
+        cfsetospeed(&tty, B115200);
+        cfsetispeed(&tty, B115200);
+    }
+    else
+    {
+        cfsetospeed(&tty, B38400);
+        cfsetispeed(&tty, B38400);
+    }
 
     // 8N1 configuration
     tty.c_cflag &= ~CSIZE;

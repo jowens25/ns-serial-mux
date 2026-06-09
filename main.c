@@ -16,11 +16,14 @@
 
 #define SERIAL_PORT_PARM "SERIAL_PORT"
 #define SOCKET_PATH_PARM "SOCKET_PATH"
+#define BAUD_RATE_PARM "BAUD_RATE"
 
 struct termios tty;
 // int clients[MAX_CONNECTIONS] = {-1, -1, -1, -1};
 // int max_fd;
 int debug = false;
+
+int baudrate = 38400;
 
 #define DEF_BUFSIZE 512
 
@@ -172,6 +175,12 @@ void read_config(void)
                         syslog(LOG_INFO, "Using socket path: %s", rval);
                         strcpy(SOCKET_PATH, rval);
                     }
+
+                    if (strcasecmp(lval, BAUD_RATE_PARM) == 0)
+                    {
+                        syslog(LOG_INFO, "Using baudrate path: %s", rval);
+                        baudrate = atoi(rval);
+                    }
                 }
             }
         }
@@ -322,7 +331,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    serial_fd = serialSetup(ser);
+    serial_fd = serialSetup(ser, baudrate);
 
     set_nonblocking(serial_fd);
     FD_SET(serial_fd, &master);
