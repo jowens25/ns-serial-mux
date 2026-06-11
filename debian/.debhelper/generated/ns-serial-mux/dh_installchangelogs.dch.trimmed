@@ -1,4 +1,4 @@
-ns-serial-mux (2.0.17) UNRELEASED; urgency=medium
+ns-serial-mux (2.0.18) UNRELEASED; urgency=medium
   [jowens]
   * added logging
   * 2.0.10 release
@@ -9,5 +9,6 @@ ns-serial-mux (2.0.17) UNRELEASED; urgency=medium
   * added postrm
   * fixed script
   * trying to fix stat
+  * added default baud of 38400
 
- -- jowens <jowens@jowens>  Tue, 09 Jun 2026 09:16:56 -0500
+ -- jowens <jowens@jowens>  Tue, 09 Jun 2026 11:11:54 -0500
